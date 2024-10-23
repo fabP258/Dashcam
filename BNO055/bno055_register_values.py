@@ -33,3 +33,10 @@ def compose_acc_config(g_range: hex, bandwidth: hex, op_mode: hex):
 GYR_RANGE = {"2000dps": 0x0, "1000dps": 0x1, "500dps": 0x2, "250dps": 0x3, "125dps": 0x4}
 GYR_BANDWIDTH = {"523Hz": 0x0, "230Hz": 0x1, "116Hz": 0x2, "47Hz": 0x3, "23Hz": 0x4, "12Hz": 0x5, "64Hz": 0x6, "32Hz": 0x7}
 GYR_OP_MODE = {"Normal": 0x0, "FastPowerUp": 0x1, "DeepSuspend": 0x2, "Suspend": 0x3, "AdvancedPowersave": 0x4}
+
+# Units
+ACC_UNIT = {"metre_per_square_second": 0x0, "milli_g": 0x2}
+GYR_UNIT = {"degree_per_second": 0x0, "radian_per_second": 0x1}
+EUL_ANG_UNIT = {"degree": 0x0, "radian": 0x1}
+TEMP_UNIT = {"celsius": 0x0, "fahrenheit": 0x2}
+FUS_DATA_CONV = {"Windows": 0x0, "Android": 0x1}
