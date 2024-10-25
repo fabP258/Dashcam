@@ -24,6 +24,8 @@ class BNO055:
         self._pwr_mode: bno055_register_values.PwrMode = None
         # Configure the sensor
         self.configure_sensor(config)
+        # TODO: check if configuration was successful by reading it and comparing
+        self.config: BNO055Config = config
         # Read and print the sensor configuration
         self.print_config()
 
@@ -128,18 +130,42 @@ class BNO055:
                 value -= 65536
         return value
 
-    def read_acc_data(self):
-        # TODO: check if op_mode supports acc readings
+    def read_acc_data(self) -> tuple:
+        acc_data = (None, None, None)
+        if self._op_mode == bno055_register_values.OpMode.CONFIGMODE:
+            return acc_data
+        if self._op_mode == bno055_register_values.OpMode.MAGONLY:
+            return acc_data
+        if self._op_data == bno055_register_values.OpMode.GYROONLY:
+            return acc_data
+        if self._op_data == bno055_register_values.OpMode.MAGGYRO:
+            return acc_data
+        if self._op_data == bno055_register_values.OpMode.AMG:
+            return acc_data
         acc_x = self.read_16bit_register(bno055_registers.ACCEL_DATA_X_LSB_ADDRESS)
         acc_y = self.read_16bit_register(bno055_registers.ACCEL_DATA_Y_LSB_ADDRESS)
         acc_z = self.read_16bit_register(bno055_registers.ACCEL_DATA_Z_LSB_ADDRESS)
 
         # TODO: convert from signed int to float
 
+        return (acc_x, acc_y, acc_z)
+
     def read_gyr_data(self):
-        # TODO: check if op_mode supports gyro readings
+        gyr_data = (None, None, None)
+        if self._op_mode == bno055_register_values.OpMode.CONFIGMODE:
+            return gyr_data
+        if self._op_mode == bno055_register_values.OpMode.ACCONLY:
+            return gyr_data
+        if self._op_mode == bno055_register_values.OpMode.MAGONLY:
+            return gyr_data
+        if self._op_mode == bno055_register_values.OpMode.ACCMAG:
+            return gyr_data
+        if self._op_mode == bno055_register_values.OpMode.AMG:
+            return gyr_data
         rate_x = self.read_16bit_register(bno055_registers.GYRO_DATA_X_LSB_ADDRESS)
         rate_y = self.read_16bit_register(bno055_registers.GYRO_DATA_Y_LSB_ADDRESS)
         rate_z = self.read_16bit_register(bno055_registers.GYRO_DATA_Z_LSB_ADDRESS)
 
         # TODO: convert from signed int to float
+
+        return (rate_x, rate_y, rate_z)
