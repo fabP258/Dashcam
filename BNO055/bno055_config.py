@@ -1,5 +1,6 @@
 from dataclasses import dataclass, field, fields
 import bno055_register_values as reg_vals
+from abc import ABC, abstractmethod
 
 
 def map_key_to_value(d: dict, value):
@@ -12,7 +13,27 @@ def map_key_to_value(d: dict, value):
 
 
 @dataclass
-class BNO055AccConfig:
+class BNO055ConfigBase(ABC):
+    @abstractmethod
+    def is_valid(self) -> bool:
+        raise NotImplementedError
+
+    @classmethod
+    @abstractmethod
+    def from_register_value(cls, register_value: int):
+        raise NotImplementedError
+
+    def print_config(self):
+        """Prints the config to the console if the config is valid."""
+        if not self.is_valid():
+            raise ValueError(f"Cannot print an invalid {self.__class__.__name__}.")
+        print(f"==== {self.__class__.__name__} ====")
+        for f in fields(self):
+            print(f"{f.name}: {getattr(self, f.name)}")
+
+
+@dataclass
+class BNO055AccConfig(BNO055ConfigBase):
     value_range: str = "4G"
     bandwidth: str = "62.5Hz"
     op_mode: str = "Normal"
@@ -48,14 +69,6 @@ class BNO055AccConfig:
             return False
         return True
 
-    def print_config(self):
-        """Prints the config to the console if the config is valid."""
-        if not self.is_valid():
-            raise ValueError("Cannot print an invalid accelerometer config.")
-        print("Accelerometer configuration:")
-        for f in fields(self):
-            print(f"{f.name}: {getattr(self, f.name)}")
-
     @classmethod
     def from_register_value(cls, register_value: int):
         """Creates an instance of the class from the read register value given as int."""
@@ -72,7 +85,7 @@ class BNO055AccConfig:
 
 
 @dataclass
-class BNO055GyrConfig:
+class BNO055GyrConfig(BNO055ConfigBase):
     value_range: str = "2000dps"
     bandwidth: str = "32Hz"
     op_mode: str = "Normal"
@@ -99,6 +112,17 @@ class BNO055GyrConfig:
             )
         # NOTE: Here only 3 Bits are returned since bit3 to bit7 are reserved
         return reg_vals.GYR_OP_MODE[self.op_mode]
+
+    def is_valid(self) -> bool:
+        if not all([getattr(self, f.name) is not None for f in fields(self)]):
+            return False
+        if not self.value_range in reg_vals.GYR_RANGE.keys():
+            return False
+        if not self.bandwidth in reg_vals.GYR_BANDWIDTH.keys():
+            return False
+        if not self.op_mode in reg_vals.GYR_OP_MODE.keys():
+            return False
+        return True
 
     @classmethod
     def from_register_value(cls, register_value0: int, register_value1):

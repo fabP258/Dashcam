@@ -114,6 +114,7 @@ class BNO055:
             self.read_byte_data(bno055_registers.GYRO_CONFIG_0),
             self.read_byte_data(bno055_registers.GYRO_CONFIG_1),
         )
+        gyr_config.print_config()
         self.switch_register_page(0x00)
 
     def read_16bit_register(self, register_low, signed: bool = True):
