@@ -2,12 +2,22 @@ import time
 import smbus2
 import bno055_registers
 import bno055_register_values
-from bno055_config import BNO055Config, BNO055AccConfig, BNO055GyrConfig, BNO055UnitConfig
+from bno055_config import (
+    BNO055Config,
+    BNO055AccConfig,
+    BNO055GyrConfig,
+    BNO055UnitConfig,
+)
 
 
 class BNO055:
 
-    def __init__(self, i2c_address: int = 0x28, i2c_bus_identifier: int = 1, config: BNO055Config = BNO055Config()):
+    def __init__(
+        self,
+        i2c_address: int = 0x28,
+        i2c_bus_identifier: int = 1,
+        config: BNO055Config = BNO055Config(),
+    ):
         self._i2c_address = i2c_address
         self._i2c_bus = smbus2.SMBus(i2c_bus_identifier)
         self._op_mode: bno055_register_values.OpMode = None
@@ -16,7 +26,7 @@ class BNO055:
         self.configure_sensor(config)
         # Read and print the sensor configuration
         self.print_config()
-    
+
     def set_op_mode(self, op_mode: bno055_register_values.OpMode):
         self.write_byte_data(bno055_registers.OP_MODE_ADDRESS, op_mode.value)
         if op_mode == bno055_register_values.OpMode.CONFIGMODE:
@@ -56,18 +66,28 @@ class BNO055:
 
     def _configure_acc(self, acc_config: BNO055AccConfig):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
-            raise Warning("Could not configure accelerometer. Sensor is not in config mode.")
-        self.write_byte_data(bno055_registers.ACC_CONFIG, acc_config.get_register_value())
+            raise Warning(
+                "Could not configure accelerometer. Sensor is not in config mode."
+            )
+        self.write_byte_data(
+            bno055_registers.ACC_CONFIG, acc_config.get_register_value()
+        )
 
     def _configure_gyr(self, gyr_config: BNO055GyrConfig):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
-            raise Warning("Could not configure accelerometer. Sensor is not in config mode.")
-        gyr_config_0 = self._i2c_bus.read_byte_data(self._i2c_address, bno055_registers.GYRO_CONFIG_0)
+            raise Warning(
+                "Could not configure accelerometer. Sensor is not in config mode."
+            )
+        gyr_config_0 = self._i2c_bus.read_byte_data(
+            self._i2c_address, bno055_registers.GYRO_CONFIG_0
+        )
         reserved_mask0 = 0b11000000
         gyr_config_0 &= reserved_mask0
         new_gyr_config_0 = gyr_config_0 | gyr_config.get_register_value_0()
         self.write_byte_data(bno055_registers.GYRO_CONFIG_0, new_gyr_config_0)
-        gyr_config_1 = self._i2c_bus.read_byte_data(self._i2c_address, bno055_registers.GYRO_CONFIG_1)
+        gyr_config_1 = self._i2c_bus.read_byte_data(
+            self._i2c_address, bno055_registers.GYRO_CONFIG_1
+        )
         reserved_mask1 = 0b11111000
         gyr_config_1 &= reserved_mask1
         new_gyr_config_1 = gyr_config_0 | gyr_config.get_register_value_1()
@@ -75,7 +95,9 @@ class BNO055:
 
     def _configure_units(self, unit_config: BNO055UnitConfig):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
-            raise Warning("Could not configure sensor units. Sensor is not in config mode.")
+            raise Warning(
+                "Could not configure sensor units. Sensor is not in config mode."
+            )
         unit_sel_value = self.read_byte_data(bno055_registers.UNIT_SEL)
         reserved_mask = 0b01101000
         unit_sel_value &= reserved_mask
@@ -84,8 +106,14 @@ class BNO055:
 
     def print_config(self):
         self.switch_register_page(0x01)
-        acc_config = BNO055AccConfig.from_register_value(self.read_byte_data(bno055_registers.ACC_CONFIG))
-        gyr_config = BNO055GyrConfig.from_register_value(self.read_byte_data(bno055_registers.GYRO_CONFIG_0), self.read_byte_data(bno055_registers.GYRO_CONFIG_1))
+        acc_config = BNO055AccConfig.from_register_value(
+            self.read_byte_data(bno055_registers.ACC_CONFIG)
+        )
+        acc_config.print_config()
+        gyr_config = BNO055GyrConfig.from_register_value(
+            self.read_byte_data(bno055_registers.GYRO_CONFIG_0),
+            self.read_byte_data(bno055_registers.GYRO_CONFIG_1),
+        )
         self.switch_register_page(0x00)
 
     def read_16bit_register(self, register_low, signed: bool = True):
@@ -98,7 +126,7 @@ class BNO055:
             if value > 32767:
                 value -= 65536
         return value
-    
+
     def read_acc_data(self):
         # TODO: check if op_mode supports acc readings
         acc_x = self.read_16bit_register(bno055_registers.ACCEL_DATA_X_LSB_ADDRESS)
@@ -114,5 +142,3 @@ class BNO055:
         rate_z = self.read_16bit_register(bno055_registers.GYRO_DATA_Z_LSB_ADDRESS)
 
         # TODO: convert from signed int to float
-
-

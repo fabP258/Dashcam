@@ -1,5 +1,15 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 import bno055_register_values as reg_vals
+
+
+def map_key_to_value(d: dict, value):
+    """Returns the dictionary key corresponding to a given value. Assumes values to be unique in the dictionary."""
+    res = None
+    for k, v in d.items():
+        if v == value:
+            res = k
+    return res
+
 
 @dataclass
 class BNO055AccConfig:
@@ -9,26 +19,57 @@ class BNO055AccConfig:
 
     def get_register_value(self):
         if self.value_range not in reg_vals.ACC_G_RANGE.keys():
-            raise ValueError(f"Accelerometer value range {self.value_range} not supported by sensor.")
+            raise ValueError(
+                f"Accelerometer value range {self.value_range} not supported by sensor."
+            )
         if self.bandwidth not in reg_vals.ACC_BANDWIDTH.keys():
-            raise ValueError(f"Accelerometer bandwidth {self.bandwidth} not supported by sensor.")
+            raise ValueError(
+                f"Accelerometer bandwidth {self.bandwidth} not supported by sensor."
+            )
         if self.op_mode not in reg_vals.ACC_OP_MODE.keys():
-            raise ValueError(f"Accelerometer operation mode {self.op_mode} not supported by sensor.")
-        return reg_vals.compose_acc_config(reg_vals.ACC_G_RANGE[self.value_range], reg_vals.ACC_BANDWIDTH[self.bandwidth], reg_vals.ACC_OP_MODE[self.op_mode])
+            raise ValueError(
+                f"Accelerometer operation mode {self.op_mode} not supported by sensor."
+            )
+        return reg_vals.compose_acc_config(
+            reg_vals.ACC_G_RANGE[self.value_range],
+            reg_vals.ACC_BANDWIDTH[self.bandwidth],
+            reg_vals.ACC_OP_MODE[self.op_mode],
+        )
+
+    def is_valid(self) -> bool:
+        """Checks if the config is valid and returns the validity flag."""
+        if not all([getattr(self, f.name) is not None for f in fields(self)]):
+            return False
+        if not self.value_range in reg_vals.ACC_G_RANGE.keys():
+            return False
+        if not self.bandwidth in reg_vals.ACC_BANDWIDTH.keys():
+            return False
+        if not self.op_mode in reg_vals.ACC_OP_MODE.keys():
+            return False
+        return True
+
+    def print_config(self):
+        """Prints the config to the console if the config is valid."""
+        if not self.is_valid():
+            raise ValueError("Cannot print an invalid accelerometer config.")
+        print("Accelerometer configuration:")
+        for f in fields(self):
+            print(f"{f.name}: {getattr(self, f.name)}")
 
     @classmethod
     def from_register_value(cls, register_value: int):
-        # TODO: create the object from the int register value and the dict maps
-        print(bin(register_value))
-        # extract rightmost 8 bit --> necessary? register_value is 8 bit at max
+        """Creates an instance of the class from the read register value given as int."""
         rightmost_byte = register_value & 0xFF
-        # read bits from lsb to msb
-        for i in range(8):
-            # shift and extract LSB
-            lsb = (rightmost_byte >> i) & 1
-            print(f"Bit {i}: {lsb}")
-            # TODO: map to member variables
-        return cls
+        return cls(
+            value_range=map_key_to_value(reg_vals.ACC_G_RANGE, rightmost_byte & 0b11),
+            bandwidth=map_key_to_value(
+                reg_vals.ACC_BANDWIDTH, (rightmost_byte >> 2) & 0b111
+            ),
+            op_mode=map_key_to_value(
+                reg_vals.ACC_OP_MODE, (rightmost_byte >> 5) & 0b11100000
+            ),
+        )
+
 
 @dataclass
 class BNO055GyrConfig:
@@ -39,22 +80,31 @@ class BNO055GyrConfig:
     # TODO: Config is splitted into two registers, account for this
     def get_register_value_0(self):
         if self.value_range not in reg_vals.GYR_RANGE.keys():
-            raise ValueError(f"Gyroscope value range {self.value_range} not supported by sensor.")
+            raise ValueError(
+                f"Gyroscope value range {self.value_range} not supported by sensor."
+            )
         if self.bandwidth not in reg_vals.GYR_BANDWIDTH.keys():
-            raise ValueError(f"Gyroscope bandwidth {self.bandwidth} not supported by sensor.")
+            raise ValueError(
+                f"Gyroscope bandwidth {self.bandwidth} not supported by sensor."
+            )
         # NOTE: Here only 6 Bits are returned since bit7 and bit6 are reserved
-        return (reg_vals.GYR_BANDWIDTH[self.bandwidth] << 3) | reg_vals.GYR_RANGE[self.value_range]
-    
+        return (reg_vals.GYR_BANDWIDTH[self.bandwidth] << 3) | reg_vals.GYR_RANGE[
+            self.value_range
+        ]
+
     def get_register_value_1(self):
         if self.op_mode not in reg_vals.GYR_OP_MODE.keys():
-            raise ValueError(f"Gyroscope operation mode {self.op_mode} not supported by sensor.")
+            raise ValueError(
+                f"Gyroscope operation mode {self.op_mode} not supported by sensor."
+            )
         # NOTE: Here only 3 Bits are returned since bit3 to bit7 are reserved
         return reg_vals.GYR_OP_MODE[self.op_mode]
-    
+
     @classmethod
     def from_register_value(cls, register_value0: int, register_value1):
         # TODO: create the object from the int register value and the dict maps
         return cls
+
 
 @dataclass
 class BNO055UnitConfig:
@@ -75,13 +125,13 @@ class BNO055UnitConfig:
             raise ValueError(f"Temperature unit {self.temp} is undefined.")
         if self.fus_data not in reg_vals.FUS_DATA_CONV.keys():
             raise ValueError(f"Orientation convention {self.fus_data} is undefined.")
-        register_value = (reg_vals.FUS_DATA_CONV[self.fus_data] << 7)
-        register_value |= (reg_vals.TEMP_UNIT[self.temp] << 4)
-        register_value |= (reg_vals.EUL_ANG_UNIT[self.euler_angles] << 2)
-        register_value |= (reg_vals.GYR_UNIT[self.gyr] << 1)
-        register_value |= (reg_vals.ACC_UNIT[self.acc])
+        register_value = reg_vals.FUS_DATA_CONV[self.fus_data] << 7
+        register_value |= reg_vals.TEMP_UNIT[self.temp] << 4
+        register_value |= reg_vals.EUL_ANG_UNIT[self.euler_angles] << 2
+        register_value |= reg_vals.GYR_UNIT[self.gyr] << 1
+        register_value |= reg_vals.ACC_UNIT[self.acc]
         return register_value
-        
+
 
 @dataclass
 class BNO055Config:
