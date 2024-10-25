@@ -102,8 +102,15 @@ class BNO055GyrConfig:
 
     @classmethod
     def from_register_value(cls, register_value0: int, register_value1):
-        # TODO: create the object from the int register value and the dict maps
-        return cls
+        rightmost_byte0 = register_value0 & 0xFF
+        rightmost_byte1 = register_value1 & 0xFF
+        return cls(
+            value_range=map_key_to_value(reg_vals.GYR_RANGE, rightmost_byte0 & 0b111),
+            bandwidth=map_key_to_value(
+                reg_vals.GYR_BANDWIDTH, (rightmost_byte0 >> 3) & 0b111
+            ),
+            op_mode=map_key_to_value(reg_vals.GYR_OP_MODE, rightmost_byte1 & 0b111),
+        )
 
 
 @dataclass
