@@ -138,7 +138,7 @@ class BNO055GyrConfig(BNO055ConfigBase):
 
 
 @dataclass
-class BNO055UnitConfig:
+class BNO055UnitConfig(BNO055ConfigBase):
     acc: str = "metre_per_square_second"
     gyr: str = "radian_per_second"
     euler_angles: str = "radian"
@@ -162,6 +162,33 @@ class BNO055UnitConfig:
         register_value |= reg_vals.GYR_UNIT[self.gyr] << 1
         register_value |= reg_vals.ACC_UNIT[self.acc]
         return register_value
+
+    def is_valid(self) -> bool:
+        if not all([getattr(self, f.name) is not None for f in fields(self)]):
+            return False
+        if not self.acc in reg_vals.ACC_UNIT.keys():
+            return False
+        if not self.gyr in reg_vals.GYR_UNIT.keys():
+            return False
+        if not self.euler_angles in reg_vals.EUL_ANG_UNIT.keys():
+            return False
+        if not self.temp in reg_vals.TEMP_UNIT.keys():
+            return False
+        if not self.fus_data in reg_vals.FUS_DATA_CONV.keys():
+            return False
+        return True
+
+    @classmethod
+    def from_register_value(cls, register_value: int):
+        rightmost_byte = register_value & 0xFF
+        return cls(
+            acc=map_key_to_value(reg_vals.ACC_UNIT, rightmost_byte & 0b1),
+            gyr=map_key_to_value(reg_vals.GYR_UNIT, (rightmost_byte >> 1) & 0b1),
+            euler_angles=map_key_to_value(
+                reg_vals.EUL_ANG_UNIT, (rightmost_byte >> 2) & 0b1
+            ),
+            temp=map_key_to_value(reg_vals.TEMP_UNIT, (rightmost_byte >> 4) & 0b1),
+        )
 
 
 @dataclass

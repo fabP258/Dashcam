@@ -60,13 +60,13 @@ class BNO055:
         # TODO: Handle low power mode? --> acc can't be configured
         self.set_op_mode(bno055_register_values.OpMode.CONFIGMODE)
         self._configure_units(config.unit)
-        self.switch_register_page(0x01)
         self._configure_acc(config.accelerometer)
         self._configure_gyr(config.gyroscope)
-        self.switch_register_page(0x00)
         self.set_op_mode(config.operation_mode)
+        # TODO: check if configuration was successful by reading it and comparing
 
     def _configure_acc(self, acc_config: BNO055AccConfig):
+        self.switch_register_page(0x01)
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
                 "Could not configure accelerometer. Sensor is not in config mode."
@@ -74,8 +74,10 @@ class BNO055:
         self.write_byte_data(
             bno055_registers.ACC_CONFIG, acc_config.get_register_value()
         )
+        self.switch_register_page(0x00)
 
     def _configure_gyr(self, gyr_config: BNO055GyrConfig):
+        self.switch_register_page(0x01)
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
                 "Could not configure accelerometer. Sensor is not in config mode."
@@ -94,6 +96,7 @@ class BNO055:
         gyr_config_1 &= reserved_mask1
         new_gyr_config_1 = gyr_config_0 | gyr_config.get_register_value_1()
         self.write_byte_data(bno055_registers.GYRO_CONFIG_1, new_gyr_config_1)
+        self.switch_register_page(0x00)
 
     def _configure_units(self, unit_config: BNO055UnitConfig):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
@@ -118,6 +121,10 @@ class BNO055:
         )
         gyr_config.print_config()
         self.switch_register_page(0x00)
+        unit_config = BNO055UnitConfig.from_register_value(
+            self.read_byte_data(bno055_registers.UNIT_SEL)
+        )
+        unit_config.print_config()
 
     def read_16bit_register(self, register_low, signed: bool = True):
         low_byte = self._i2c_bus.read_byte_data(self._i2c_address, register_low)
