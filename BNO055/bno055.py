@@ -143,17 +143,23 @@ class BNO055:
             return acc_data
         if self._op_mode == bno055_register_values.OpMode.MAGONLY:
             return acc_data
-        if self._op_data == bno055_register_values.OpMode.GYROONLY:
+        if self._op_mode == bno055_register_values.OpMode.GYROONLY:
             return acc_data
-        if self._op_data == bno055_register_values.OpMode.MAGGYRO:
+        if self._op_mode == bno055_register_values.OpMode.MAGGYRO:
             return acc_data
-        if self._op_data == bno055_register_values.OpMode.AMG:
+        if self._op_mode == bno055_register_values.OpMode.AMG:
             return acc_data
         acc_x = self.read_16bit_register(bno055_registers.ACCEL_DATA_X_LSB_ADDRESS)
         acc_y = self.read_16bit_register(bno055_registers.ACCEL_DATA_Y_LSB_ADDRESS)
         acc_z = self.read_16bit_register(bno055_registers.ACCEL_DATA_Z_LSB_ADDRESS)
 
-        # TODO: convert from signed int to float
+        sensitivity = 1  # 1 mg = 1 LSB
+        if self.config.unit.acc == "metre_per_square_second":
+            sensitivity = 0.01  # 1 m / s^2 = 100 LSB
+
+        acc_x *= sensitivity
+        acc_y *= sensitivity
+        acc_z *= sensitivity
 
         return (acc_x, acc_y, acc_z)
 
@@ -173,6 +179,12 @@ class BNO055:
         rate_y = self.read_16bit_register(bno055_registers.GYRO_DATA_Y_LSB_ADDRESS)
         rate_z = self.read_16bit_register(bno055_registers.GYRO_DATA_Z_LSB_ADDRESS)
 
-        # TODO: convert from signed int to float
+        sensitivity = 1.0 / 900.0  # 1 rps = 900 LSB
+        if self.config.unit.gyr == "degree_per_second":
+            sensitivity = 1.0 / 16.0  # 1dps = 16 LSB
+
+        rate_x *= sensitivity
+        rate_y *= sensitivity
+        rate_z *= sensitivity
 
         return (rate_x, rate_y, rate_z)
