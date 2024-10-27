@@ -8,6 +8,7 @@ from bno055_config import (
     BNO055GyrConfig,
     BNO055UnitConfig,
 )
+from bno055_status import BNO055CalibrationStatus
 
 
 class BNO055:
@@ -125,6 +126,11 @@ class BNO055:
             self.read_byte_data(bno055_registers.UNIT_SEL)
         )
         unit_config.print_config()
+
+    def calibration_status(self) -> BNO055CalibrationStatus:
+        return BNO055CalibrationStatus.from_register_value(
+            self.read_byte_data(bno055_registers.CALIB_STAT_ADDRESS)
+        )
 
     def read_16bit_register(self, register_low, signed: bool = True):
         low_byte = self._i2c_bus.read_byte_data(self._i2c_address, register_low)
