@@ -1,7 +1,0 @@
-Metadata-Version: 2.1
-Name: recorder
-Version: 0.0.1
-Summary: Data recording application
-Author: Fabio Petzenhauser
-Author-email: fabio894@gmail.com
-Requires-Python: >=3.10
