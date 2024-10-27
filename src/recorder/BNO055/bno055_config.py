@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field, fields
-import bno055_register_values as reg_vals
+import recorder.BNO055.bno055_register_values as reg_vals
 from abc import ABC, abstractmethod
 
 

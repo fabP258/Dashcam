@@ -1,14 +1,9 @@
 import time
 import smbus2
-import bno055_registers
-import bno055_register_values
-from bno055_config import (
-    BNO055Config,
-    BNO055AccConfig,
-    BNO055GyrConfig,
-    BNO055UnitConfig,
-)
-from bno055_status import BNO055CalibrationStatus
+import recorder.BNO055.bno055_registers as bno055_registers
+import recorder.BNO055.bno055_register_values as bno055_register_values
+import recorder.BNO055.bno055_config as bno055_config
+import recorder.BNO055.bno055_status as bno055_status
 
 
 class BNO055:
@@ -17,7 +12,7 @@ class BNO055:
         self,
         i2c_address: int = 0x28,
         i2c_bus_identifier: int = 1,
-        config: BNO055Config = BNO055Config(),
+        config: bno055_config.BNO055Config = bno055_config.BNO055Config(),
     ):
         self._i2c_address = i2c_address
         self._i2c_bus = smbus2.SMBus(i2c_bus_identifier)
@@ -26,7 +21,7 @@ class BNO055:
         # Configure the sensor
         self.configure_sensor(config)
         # TODO: check if configuration was successful by reading it and comparing
-        self.config: BNO055Config = config
+        self.config: bno055_config.BNO055Config = config
         # Read and print the sensor configuration
         self.print_config()
 
@@ -55,7 +50,7 @@ class BNO055:
             raise ValueError(f"Page value {page} is not allowed.")
         self.write_byte_data(bno055_registers.PAGE_SELECT_ADDRESS, page)
 
-    def configure_sensor(self, config: BNO055Config):
+    def configure_sensor(self, config: bno055_config.BNO055Config):
         # TODO: Validate config (check if str are in dict keys)
         self.set_pwr_mode(config.power_mode)
         # TODO: Handle low power mode? --> acc can't be configured
@@ -66,7 +61,7 @@ class BNO055:
         self.set_op_mode(config.operation_mode)
         # TODO: check if configuration was successful by reading it and comparing
 
-    def _configure_acc(self, acc_config: BNO055AccConfig):
+    def _configure_acc(self, acc_config: bno055_config.BNO055AccConfig):
         self.switch_register_page(0x01)
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
@@ -77,7 +72,7 @@ class BNO055:
         )
         self.switch_register_page(0x00)
 
-    def _configure_gyr(self, gyr_config: BNO055GyrConfig):
+    def _configure_gyr(self, gyr_config: bno055_config.BNO055GyrConfig):
         self.switch_register_page(0x01)
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
@@ -99,7 +94,7 @@ class BNO055:
         self.write_byte_data(bno055_registers.GYRO_CONFIG_1, new_gyr_config_1)
         self.switch_register_page(0x00)
 
-    def _configure_units(self, unit_config: BNO055UnitConfig):
+    def _configure_units(self, unit_config: bno055_config.BNO055UnitConfig):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
                 "Could not configure sensor units. Sensor is not in config mode."
@@ -112,23 +107,23 @@ class BNO055:
 
     def print_config(self):
         self.switch_register_page(0x01)
-        acc_config = BNO055AccConfig.from_register_value(
+        acc_config = bno055_config.BNO055AccConfig.from_register_value(
             self.read_byte_data(bno055_registers.ACC_CONFIG)
         )
         acc_config.print_config()
-        gyr_config = BNO055GyrConfig.from_register_value(
+        gyr_config = bno055_config.BNO055GyrConfig.from_register_value(
             self.read_byte_data(bno055_registers.GYRO_CONFIG_0),
             self.read_byte_data(bno055_registers.GYRO_CONFIG_1),
         )
         gyr_config.print_config()
         self.switch_register_page(0x00)
-        unit_config = BNO055UnitConfig.from_register_value(
+        unit_config = bno055_config.BNO055UnitConfig.from_register_value(
             self.read_byte_data(bno055_registers.UNIT_SEL)
         )
         unit_config.print_config()
 
-    def calibration_status(self) -> BNO055CalibrationStatus:
-        return BNO055CalibrationStatus.from_register_value(
+    def calibration_status(self) -> bno055_status.BNO055CalibrationStatus:
+        return bno055_status.BNO055CalibrationStatus.from_register_value(
             self.read_byte_data(bno055_registers.CALIB_STAT_ADDRESS)
         )
 
