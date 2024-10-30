@@ -3,6 +3,10 @@ SW running the data recording device
 
 ## Getting started
 
+### Prerequisites
+
+This application relies on the **Picamera2** library for dealing with the cameras. Before setting up the virtual environment it is necessary to have it installed system wide. If the library is not installed please follow the instructions here: [Picamera2](https://github.com/raspberrypi/picamera2)
+
 ### Setup venv
 
 * Setup a python virtual environment and use the system python packages:
