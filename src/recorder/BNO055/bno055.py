@@ -1,12 +1,12 @@
 import time
-import smbus2
+from recorder.BNO055.i2c_sensor import I2CSensor
 import recorder.BNO055.bno055_registers as bno055_registers
 import recorder.BNO055.bno055_register_values as bno055_register_values
 import recorder.BNO055.bno055_config as bno055_config
 import recorder.BNO055.bno055_status as bno055_status
 
 
-class BNO055:
+class BNO055(I2CSensor):
 
     def __init__(
         self,
@@ -14,8 +14,7 @@ class BNO055:
         i2c_bus_identifier: int = 1,
         config: bno055_config.BNO055Config = bno055_config.BNO055Config(),
     ):
-        self._i2c_address = i2c_address
-        self._i2c_bus = smbus2.SMBus(i2c_bus_identifier)
+        super().__init__(i2c_address, i2c_bus_identifier)
         self._op_mode: bno055_register_values.OpMode = None
         self._pwr_mode: bno055_register_values.PwrMode = None
         # Configure the sensor
@@ -38,12 +37,6 @@ class BNO055:
     def set_pwr_mode(self, pwr_mode: bno055_register_values.PwrMode):
         self.write_byte_data(bno055_registers.PWR_MODE_ADDRESS, pwr_mode.value)
         self._pwr_mode = pwr_mode
-
-    def write_byte_data(self, register, value):
-        self._i2c_bus.write_byte_data(self._i2c_address, register, value)
-
-    def read_byte_data(self, register):
-        return self._i2c_bus.read_byte_data(self._i2c_address, register)
 
     def switch_register_page(self, page: hex):
         if not (page == 0x00 or page == 0x01):
@@ -127,19 +120,22 @@ class BNO055:
             self.read_byte_data(bno055_registers.CALIB_STAT_ADDRESS)
         )
 
-    def read_16bit_register(self, register_low, signed: bool = True):
-        low_byte = self._i2c_bus.read_byte_data(self._i2c_address, register_low)
-        high_byte = self._i2c_bus.read_byte_data(self._i2c_address, register_low + 1)
-        value = (high_byte << 8) | low_byte
-
-        if signed:
-            # convert value to signed int (16 Bit)
-            if value > 32767:
-                value -= 65536
+    @staticmethod
+    def int_to_signed_int(value: int):
+        if value > 32767:
+            value -= 65536
         return value
 
-    def read_acc_data(self) -> tuple:
-        acc_data = (None, None, None)
+    def read_vector(self, start_register: int) -> list:
+        """Reads a vector from a coherent register consisting of 2 bytes per entry."""
+        raw_vec = self.read_i2c_block_data(start_register, 6)
+        if not len(raw_vec) == 6:
+            return [None, None, None]
+        vec = [(raw_vec[i + 1] << 8) | raw_vec[i] for i in range(0, len(raw_vec), 2)]
+        return vec
+
+    def read_acc_data(self) -> list:
+        acc_data = [None, None, None]
         if self._op_mode == bno055_register_values.OpMode.CONFIGMODE:
             return acc_data
         if self._op_mode == bno055_register_values.OpMode.MAGONLY:
@@ -150,22 +146,18 @@ class BNO055:
             return acc_data
         if self._op_mode == bno055_register_values.OpMode.AMG:
             return acc_data
-        acc_x = self.read_16bit_register(bno055_registers.ACCEL_DATA_X_LSB_ADDRESS)
-        acc_y = self.read_16bit_register(bno055_registers.ACCEL_DATA_Y_LSB_ADDRESS)
-        acc_z = self.read_16bit_register(bno055_registers.ACCEL_DATA_Z_LSB_ADDRESS)
+        acc_data = self.read_vector(bno055_registers.ACCEL_DATA_X_LSB_ADDRESS)
 
         sensitivity = 1  # 1 mg = 1 LSB
         if self.config.unit.acc == "metre_per_square_second":
             sensitivity = 0.01  # 1 m / s^2 = 100 LSB
 
-        acc_x *= sensitivity
-        acc_y *= sensitivity
-        acc_z *= sensitivity
+        acc_data = [BNO055.int_to_signed_int(val) * sensitivity for val in acc_data]
 
-        return (acc_x, acc_y, acc_z)
+        return acc_data
 
-    def read_gyr_data(self):
-        gyr_data = (None, None, None)
+    def read_gyr_data(self) -> list:
+        gyr_data = [None, None, None]
         if self._op_mode == bno055_register_values.OpMode.CONFIGMODE:
             return gyr_data
         if self._op_mode == bno055_register_values.OpMode.ACCONLY:
@@ -176,16 +168,12 @@ class BNO055:
             return gyr_data
         if self._op_mode == bno055_register_values.OpMode.AMG:
             return gyr_data
-        rate_x = self.read_16bit_register(bno055_registers.GYRO_DATA_X_LSB_ADDRESS)
-        rate_y = self.read_16bit_register(bno055_registers.GYRO_DATA_Y_LSB_ADDRESS)
-        rate_z = self.read_16bit_register(bno055_registers.GYRO_DATA_Z_LSB_ADDRESS)
+        gyr_data = self.read_vector(bno055_registers.GYRO_DATA_X_LSB_ADDRESS)
 
         sensitivity = 1.0 / 900.0  # 1 rps = 900 LSB
         if self.config.unit.gyr == "degree_per_second":
             sensitivity = 1.0 / 16.0  # 1dps = 16 LSB
 
-        rate_x *= sensitivity
-        rate_y *= sensitivity
-        rate_z *= sensitivity
+        gyr_data = [BNO055.int_to_signed_int(val) * sensitivity for val in gyr_data]
 
-        return (rate_x, rate_y, rate_z)
+        return gyr_data
