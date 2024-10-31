@@ -13,6 +13,8 @@ class Runner:
             controls={"FrameDurationLimits": (40000, 40000)}
         )
         self._picam.configure(video_config)
+        self._rec_start_time = None
+        self._picam.pre_callback = self.rec_start_time
         self._encoder = H264Encoder()
         self._imu = BNO055()
         self._acc_timestamps = []
@@ -33,10 +35,15 @@ class Runner:
     def stop(self):
         self._picam.stop_recording()
         self._imu_task.stop()
+        self._acc_timestamps = [t - self._rec_start_time for t in self._acc_timestamps]
         self.write_imu_data()
 
+    def rec_start_time(self, request):
+        if self._rec_start_time is None:
+            self._rec_start_time = time.perf_counter()
+
     def read_imu(self):
-        timestamp = time.time()
+        timestamp = time.perf_counter()
         acc_x, acc_y, acc_z = self._imu.read_acc_data()
         gyr_x, gyr_y, gyr_z = self._imu.read_gyr_data()
         self._acc_timestamps.append(timestamp)
