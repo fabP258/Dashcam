@@ -20,7 +20,6 @@ class CameraServiceImplementation:
         if self._time_offset is None:
             self._time_offset = time.monotonic() - self._rec_start_time
             self._time_offset *= 1000
-            print(f"Sensor time offset is {self._time_offset} ms.")
 
     def start(self):
         self._picam.start_recording(
