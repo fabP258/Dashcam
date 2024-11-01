@@ -13,7 +13,7 @@ class ServiceRunner:
         self.monitor()
 
     def stop(self):
-        for service in self._services:
+        for service in reversed(self._services):
             service.stop()
 
     def monitor(self):
