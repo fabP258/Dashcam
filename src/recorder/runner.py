@@ -1,7 +1,7 @@
 import time
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
-from recorder.BNO055.bno055 import BNO055
+from recorder.BNO055.lib.bno055 import BNO055
 from recorder.system.periodic_task import PeriodicTask
 
 

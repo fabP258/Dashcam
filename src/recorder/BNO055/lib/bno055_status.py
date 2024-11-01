@@ -1,5 +1,5 @@
 from dataclasses import dataclass, fields
-import recorder.BNO055.bno055_config as bno055_config
+import recorder.BNO055.lib.bno055_config as bno055_config
 
 CALIBRATION_STATUS_MAP = {"NOT_CALIBRATED": 0x0, "FULLY_CALIBRATED": 0x3}
 

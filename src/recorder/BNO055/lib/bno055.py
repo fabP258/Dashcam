@@ -1,9 +1,9 @@
 import time
-from recorder.BNO055.i2c_sensor import I2CSensor
-import recorder.BNO055.bno055_registers as bno055_registers
-import recorder.BNO055.bno055_register_values as bno055_register_values
-import recorder.BNO055.bno055_config as bno055_config
-import recorder.BNO055.bno055_status as bno055_status
+from recorder.BNO055.lib.i2c_sensor import I2CSensor
+import recorder.BNO055.lib.bno055_registers as bno055_registers
+import recorder.BNO055.lib.bno055_register_values as bno055_register_values
+import recorder.BNO055.lib.bno055_config as bno055_config
+import recorder.BNO055.lib.bno055_status as bno055_status
 
 
 class BNO055(I2CSensor):
