@@ -23,7 +23,7 @@ class ServiceRunner:
         while True:
             rate_keeper.wait()
             elapsed_time = rate_keeper.get_last_monitor_time() - start_time
-            print(f"REC: {elapsed_time} s")
+            print(f"REC: {elapsed_time:.2f} s")
             if elapsed_time >= 60:
                 break
         print("Stopping recording ...")
