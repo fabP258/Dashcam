@@ -26,3 +26,9 @@ This application relies on the **Picamera2** library for dealing with the camera
 
 `pip install -e .`
 
+## Remarks
+
+It is known when playing the recored video with e.g. VLC they seem to be laggy. To avoid this a simple post-processing can be run using `ffmpeg` specifying the frame rate can be applied
+
+`ffmpeg -r 25 -i video.h264 video.mkv`
+
