@@ -1,6 +1,7 @@
 import time
 from typing import List
 from recorder.system.process import PythonProcess
+from recorder.system.rate_keeper import RateKeeper
 
 
 class ServiceRunner:
@@ -17,5 +18,13 @@ class ServiceRunner:
             service.stop()
 
     def monitor(self):
-        time.sleep(60)
+        rate_keeper = RateKeeper(1)
+        start_time = rate_keeper.get_last_monitor_time()
+        while True:
+            rate_keeper.wait()
+            elapsed_time = rate_keeper.get_last_monitor_time() - start_time
+            print(f"REC: {elapsed_time} s")
+            if elapsed_time >= 60:
+                break
+        print("Stopping recording ...")
         self.stop()
