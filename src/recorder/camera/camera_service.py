@@ -7,7 +7,7 @@ from recorder.system.process import PythonProcess
 
 class CameraServiceImplementation:
     def __init__(self, rec_start_time: float, logging_directory: str | Path):
-        self._picam = Picamera2()
+        self._picam = Picamera2(1)
         video_config = self._picam.create_video_configuration(
             controls={"FrameDurationLimits": (40000, 40000)}
         )
