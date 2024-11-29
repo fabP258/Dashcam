@@ -1,7 +1,7 @@
 """Implements a python process class"""
 
 from abc import ABC, abstractmethod
-from multiprocessing import Process, Event
+from multiprocessing import Event, Process
 
 
 class PythonProcess(ABC):
@@ -20,7 +20,13 @@ class PythonProcess(ABC):
         if self.proc is not None:
             return
 
-        self.proc = Process(target=self.run, args=(self.stop_event, self.start_time))
+        self.proc = Process(
+            target=self.run,
+            args=(
+                self.stop_event,
+                self.start_time,
+            ),
+        )
         self.proc.start()
 
     def stop(self) -> None | int:

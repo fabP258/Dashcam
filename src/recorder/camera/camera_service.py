@@ -1,6 +1,8 @@
 import time
+
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
+
 from recorder.system.process import PythonProcess
 
 
