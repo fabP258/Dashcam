@@ -30,19 +30,21 @@ class SharedMemory(PythonProcess):
 class SharedMemoryPublisher(SharedMemory):
     def __init__(self, start_time: float, shm_name: str, shm_size: int, shm_condition):
         super().__init__(start_time, shm_name, shm_size, shm_condition)
+        self.setup_shm()
 
     def setup_shm(self):
-        if self.shm is not None or self.buffer is not None:
+        if self.shm is not None or self.shm_buffer is not None:
             assert False, "Shared memory already initialized"
 
         self.shm = shared_memory.SharedMemory(
             create=True, name=self.shm_name, size=self.shm_size
         )
-        self.shm_buffer = np.ndarray(self.shm_size, dtype=np.uint8, buffer=self.shm.buf)
-        self.shm_buffer.fill(0)
 
     def publish(self, data: bytes):
         with self.shm_condition:
+            if len(data) > self.shm_size:
+                # what to do then?
+                raise ValueError("Data size is greater than shared memory size")
             self.shm.buf[: len(data)] = data
             self.shm_condition.notify_all()
 
@@ -50,18 +52,16 @@ class SharedMemoryPublisher(SharedMemory):
 class SharedMemorySubscriber(SharedMemory):
     def __init__(self, start_time: float, shm_name: str, shm_size: int, shm_condition):
         super().__init__(start_time, shm_name, shm_size, shm_condition)
+        self.setup_shm()
 
     def setup_shm(self):
         if self.shm is not None or self.shm_buffer is not None:
             assert False, "Shared memory already attached"
 
         self.shm = shared_memory.SharedMemory(name=self.shm_name)
-        self.shm_buffer = np.ndarray(
-            (self.shm_size,), dtype=np.int8, buffer=self.shm.buf
-        )
 
     def subscribe(self):
         """Subscribe to the shared memory and return the data."""
         with self.shm_condition:
             self.shm_condition.wait()
-            return self.shm_buffer.tobytes()
+            return bytes(self.shm.buf[:]).decode().split("\x00")[0]
