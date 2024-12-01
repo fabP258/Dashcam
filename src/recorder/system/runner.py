@@ -1,12 +1,12 @@
-import time
 from typing import List
 from recorder.system.process import PythonProcess
+from recorder.system.service import Service
 from recorder.system.rate_keeper import RateKeeper
 
 
 class ServiceRunner:
-    def __init__(self, services: List[PythonProcess]):
-        self._services = services
+    def __init__(self, services: List[Service]):
+        self._services = [PythonProcess(service) for service in services]
 
     def start(self):
         for service in self._services:
