@@ -49,7 +49,7 @@ class CameraService(Service):
         self._start_time = start_time
         self._logging_directory = Path(logging_directory)
 
-    def run(self, stop_event):
+    def _run(self, stop_event):
         service_implementation = CameraServiceImplementation(
             rec_start_time=self._start_time, logging_directory=self._logging_directory
         )
