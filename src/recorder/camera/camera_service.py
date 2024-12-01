@@ -2,7 +2,7 @@ import time
 from pathlib import Path
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
-from recorder.system.process import PythonProcess
+from recorder.system.service import Service
 
 
 class CameraServiceImplementation:
@@ -44,14 +44,14 @@ class CameraServiceImplementation:
                 f.write(f"{timestamp+self._time_offset}\n")
 
 
-class CameraService(PythonProcess):
+class CameraService(Service):
     def __init__(self, start_time: float, logging_directory: str | Path):
-        super().__init__(start_time, logging_directory)
+        self._start_time = start_time
+        self._logging_directory = Path(logging_directory)
 
-    @staticmethod
-    def run(stop_event, start_time, logging_directory):
+    def run(self, stop_event):
         service_implementation = CameraServiceImplementation(
-            rec_start_time=start_time, logging_directory=logging_directory
+            rec_start_time=self._start_time, logging_directory=self._logging_directory
         )
         service_implementation.start()
         while not stop_event.is_set():

@@ -1,22 +1,21 @@
 """Implements a python process class"""
 
-from abc import ABC, abstractmethod
 from multiprocessing import Process, Event
-from pathlib import Path
+from recorder.system.service import Service
 
 
-class PythonProcess(ABC):
-    def __init__(self, start_time: float, logging_directory: str | Path):
+class PythonProcess:
+    def __init__(
+        self,
+        service: Service,
+    ):
         self.proc: Process | None = None
         self.stop_event = Event()
-        self.start_time = start_time
-        self.logging_directory = Path(logging_directory)
+        self.service = service
 
     @staticmethod
-    @abstractmethod
-    def run(stop_event, start_time, logging_directory):
-        """Business logic to be implemented by the child class."""
-        raise NotImplementedError
+    def run(stop_event, service: Service):
+        service.run(stop_event)
 
     def start(self):
         if self.proc is not None:
@@ -24,7 +23,10 @@ class PythonProcess(ABC):
 
         self.proc = Process(
             target=self.run,
-            args=(self.stop_event, self.start_time, self.logging_directory),
+            args=(
+                self.stop_event,
+                self.service,
+            ),
         )
         self.proc.start()
 
