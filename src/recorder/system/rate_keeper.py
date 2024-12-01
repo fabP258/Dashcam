@@ -14,3 +14,6 @@ class RateKeeper:
         waiting_time = max(0, self._interval - elapsed_time)
         time.sleep(waiting_time)
         self._last_monitor_time = time.monotonic()
+
+    def get_last_monitor_time(self):
+        return self._last_monitor_time
