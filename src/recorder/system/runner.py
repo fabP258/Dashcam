@@ -2,15 +2,17 @@ from typing import List
 from recorder.system.process import PythonProcess
 from recorder.system.service import Service
 from recorder.system.rate_keeper import RateKeeper
+from recorder.system.message_broker import SharedMemoryMessageBroker
 
 
 class ServiceRunner:
     def __init__(self, services: List[Service]):
         self._services = [PythonProcess(service) for service in services]
+        self._message_broker = SharedMemoryMessageBroker()
 
     def start(self):
         for service in self._services:
-            service.start()
+            service.start(self._message_broker.shm_name())
         self.monitor()
 
     def stop(self):

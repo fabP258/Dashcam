@@ -1,6 +1,7 @@
 """Implements a python process class"""
 
 from multiprocessing import Process, Event
+from recorder.system.message_broker import SharedMemoryMessageBroker
 from recorder.system.service import Service
 
 
@@ -14,19 +15,17 @@ class PythonProcess:
         self.service = service
 
     @staticmethod
-    def run(stop_event, service: Service):
-        service.run(stop_event)
+    def run(stop_event, service: Service, shm_name):
+        message_broker = SharedMemoryMessageBroker(shm_name)
+        service.run(stop_event, message_broker)
 
-    def start(self):
+    def start(self, shm_name):
         if self.proc is not None:
             return
 
         self.proc = Process(
             target=self.run,
-            args=(
-                self.stop_event,
-                self.service,
-            ),
+            args=(self.stop_event, self.service, shm_name),
         )
         self.proc.start()
 
