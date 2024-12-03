@@ -1,5 +1,6 @@
 import time
 from pathlib import Path
+from libcamera import controls
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
 from recorder.system.service import Service
@@ -9,7 +10,13 @@ class CameraServiceImplementation:
     def __init__(self, rec_start_time: float, logging_directory: str | Path):
         self._picam = Picamera2(1)
         video_config = self._picam.create_video_configuration(
-            controls={"FrameDurationLimits": (40000, 40000)}
+            controls={
+                "FrameDurationLimits": (40000, 40000),
+                "ExposureTime": 10000,  # set this lower for calibration
+                "AfMode": controls.AfModeEnum.Manual,
+                # "AeEnable": False,
+                # "HdrMode": controls.HdrModeEnum.SingleExposure
+            }
         )
         self._picam.configure(video_config)
         self._rec_start_time = rec_start_time
