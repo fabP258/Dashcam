@@ -1,24 +1,24 @@
 import time
 from pathlib import Path
 from typing import List
-from recorder.system.process import PythonProcess
+from recorder.system.service import Service
 from recorder.system.rate_keeper import RateKeeper
 from recorder.BNO055.lib.bno055 import BNO055
 
 
-class IMUService(PythonProcess):
+class IMUService(Service):
     def __init__(self, start_time: float, logging_directory: str | Path):
-        super().__init__(start_time, logging_directory)
+        self._start_time = start_time
+        self._logging_directory = logging_directory
 
-    @staticmethod
-    def run(stop_event, start_time, logging_directory):
+    def run(self, stop_event):
         sensor = BNO055()
         data = []
         rate_keeper = RateKeeper(100)
         while not stop_event.is_set():
             data.append(IMUService.read_sensor_data(sensor))
             rate_keeper.wait()
-        IMUService.write_data(data, start_time, logging_directory)
+        IMUService.write_data(data, self._start_time, self._logging_directory)
 
     @staticmethod
     def write_data(data: List[tuple], start_time: float, logging_directory: Path):
