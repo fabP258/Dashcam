@@ -70,7 +70,7 @@ MSGQMessage * MSGQSubSocket::receive(){
   // NOTE: Only non-blocking receive implemented so far
 
   msgq_msg_t msg;
-  int rc = msgq_msg_recv(&msg, q);
+  int rc = msgq_msg_recv(&msg, m_q);
 
   MSGQMessage *r = NULL;
   if (rc > 0) {

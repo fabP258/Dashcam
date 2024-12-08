@@ -25,7 +25,7 @@ public:
   static MSGQSubSocket * create(std::string endpoint, bool conflate=false);
   int connect(std::string endpoint, bool conflate=false);
   void * getRawSocket() {return (void*)m_q;}
-  MSGQMessage *receive(bool non_blocking=false);
+  MSGQMessage *receive();
 };
 
 class MSGQPubSocket {
