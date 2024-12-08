@@ -3,7 +3,13 @@
 #include <atomic>
 #include <string>
 
+#define DEFAULT_SEGMENT_SIZE (10 * 1024 * 1024)
 #define NUM_READERS 10
+#define ALIGN(n) ((n + (8 - 1)) & -8)
+
+#define UNUSED(x) (void)x
+#define UNPACK64(higher, lower, input) do {uint64_t tmp = input; higher = tmp >> 32; lower = tmp & 0xFFFFFFFF;} while (0)
+#define PACK64(output, higher, lower) output = ((uint64_t)higher << 32) | ((uint64_t)lower & 0xFFFFFFFF)
 
 struct  msgq_header_t {
   uint64_t num_readers;
@@ -37,5 +43,16 @@ struct msgq_msg_t {
   char * data;
 };
 
+void msgq_reset_reader(msgq_queue_t *q);
+int msgq_msg_init_size(msgq_msg_t *msg, size_t size);
+int msgq_msg_close(msgq_msg_t *msg);
+
 int msgq_new_queue(msgq_queue_t * q, const char * path, size_t size);
 void msgq_close_queue(msgq_queue_t *q);
+void msgq_init_subscriber(msgq_queue_t * q);
+void msgq_init_publisher(msgq_queue_t * q);
+
+int msgq_msg_recv(msgq_msg_t *msg, msgq_queue_t *q);
+int msgq_msg_send(msgq_msg_t *msg, msgq_queue_t *q);
+
+bool msgq_all_readers_updated(msgq_queue_t *q);
