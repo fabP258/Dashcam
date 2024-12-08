@@ -17,21 +17,16 @@ public:
   ~MSGQMessage();
 };
 
-/*
 class MSGQSubSocket {
 private:
   msgq_queue_t * m_q = NULL;
-  // TODO: is timeout needed for shared memory?
-  int m_timeout;
 public:
-  int connect(std::string endpoint, bool conflate=false);
-  void setTimeout(int timeout);
-  void * getRawSocket() {return (void*)m_q;}
-  static MSGQSubSocket * create(std::string endpoint, bool conflate=false);
-  MSGQMessage *receive(bool non_blocking=false);
   ~MSGQSubSocket();
+  static MSGQSubSocket * create(std::string endpoint, bool conflate=false);
+  int connect(std::string endpoint, bool conflate=false);
+  void * getRawSocket() {return (void*)m_q;}
+  MSGQMessage *receive(bool non_blocking=false);
 };
-*/
 
 class MSGQPubSocket {
 private:

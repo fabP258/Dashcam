@@ -28,19 +28,26 @@ void MSGQMessage::close() {
 MSGQMessage::~MSGQMessage() {
   this->close();
 }
-/*
+
+MSGQSubSocket::~MSGQSubSocket(){
+  if (m_q != NULL){
+    msgq_close_queue(m_q);
+    delete m_q;
+  }
+}
+
 MSGQSubSocket * MSGQSubSocket::create(std::string endpoint, bool conflate){
   MSGQSubSocket *s = new MSGQSubSocket();
   int r = s->connect(endpoint, conflate);
 
   if (r == 0) {
     return s;
-  } else {
-    std::cerr << "Error, failed to connect SubSocket to " << endpoint << ": " << strerror(errno) << std::endl;
-
-    delete s;
-    return nullptr;
   }
+
+  std::cerr << "Error, failed to connect SubSocket to " << endpoint << ": " << strerror(errno) << std::endl;
+
+  delete s;
+  return nullptr;
 }
 
 int MSGQSubSocket::connect(std::string endpoint, bool conflate){
@@ -50,75 +57,31 @@ int MSGQSubSocket::connect(std::string endpoint, bool conflate){
     return r;
   }
 
-  msgq_init_subscriber(q);
+  msgq_init_subscriber(m_q);
 
   if (conflate){
-    q->read_conflate = true;
+    m_q->read_conflate = true;
   }
-
-  m_timeout = -1;
 
   return 0;
 }
 
-MSGQMessage * MSGQSubSocket::receive(bool non_blocking){
-  msgq_do_exit = 0;
-
-  // TODO: do we need support for polling?
-
-  void (*prev_handler_sigint)(int);
-  void (*prev_handler_sigterm)(int);
-  if (!non_blocking){
-    prev_handler_sigint = std::signal(SIGINT, sig_handler);
-    prev_handler_sigterm = std::signal(SIGTERM, sig_handler);
-  }
+MSGQMessage * MSGQSubSocket::receive(){
+  // NOTE: Only non-blocking receive implemented so far
 
   msgq_msg_t msg;
-
-  MSGQMessage *r = NULL;
-
   int rc = msgq_msg_recv(&msg, q);
 
-  // Hack to implement blocking read with a poller. Don't use this
-  while (!non_blocking && rc == 0 && msgq_do_exit == 0){
-    msgq_pollitem_t items[1];
-    items[0].q = q;
-
-    int t = (m_timeout != -1) ? m_timeout : 100;
-
-    int n = msgq_poll(items, 1, t);
-    rc = msgq_msg_recv(&msg, q);
-
-    // The poll indicated a message was ready, but the receive failed. Try again
-    if (n == 1 && rc == 0){
-      continue;
-    }
-
-    if (m_timeout != -1){
-      break;
-    }
+  MSGQMessage *r = NULL;
+  if (rc > 0) {
+    r = new MSGQMessage;
+    r->takeOwnership(msg.data, msg.size);
+  } else {
+    msgq_msg_close(&msg);
   }
 
-
-  if (!non_blocking){
-    std::signal(SIGINT, prev_handler_sigint);
-    std::signal(SIGTERM, prev_handler_sigterm);
-  }
-
-  errno = msgq_do_exit ? EINTR : 0;
-
-  if (rc > 0){
-    if (msgq_do_exit){
-      msgq_msg_close(&msg); // Free unused message on exit
-    } else {
-      r = new MSGQMessage;
-      r->takeOwnership(msg.data, msg.size);
-    }
-  }
-
-  return (Message*)r;
+  return r;
 }
-*/
 
 MSGQPubSocket * MSGQPubSocket::create(std::string endpoint){
   MSGQPubSocket * s = new MSGQPubSocket();

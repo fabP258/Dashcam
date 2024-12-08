@@ -216,7 +216,6 @@ int msgq_msg_recv(msgq_msg_t * msg, msgq_queue_t * q){
     goto start;
   }
 
-
   return msg->size;
 }
 
