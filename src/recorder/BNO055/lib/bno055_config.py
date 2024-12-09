@@ -236,7 +236,7 @@ class BNO055AxisMapConfig(BNO055ConfigBase):
 class BNO055AxisSignConfig(BNO055ConfigBase):
     x_axis: int = 1
     y_axis: int = 1
-    z_axis: int = 0
+    z_axis: int = 1
 
     def is_valid(self) -> bool:
         if self.x_axis not in (0, 1):
