@@ -82,3 +82,6 @@ GYR_UNIT = {"degree_per_second": 0x0, "radian_per_second": 0x1}
 EUL_ANG_UNIT = {"degree": 0x0, "radian": 0x1}
 TEMP_UNIT = {"celsius": 0x0, "fahrenheit": 0x1}
 FUS_DATA_CONV = {"Windows": 0x0, "Android": 0x1}
+
+# Axis remap
+AXIS_MAP_CONFIG = {"x_axis": 0x0, "y_axis": 0x1, "z_axis": 0x2}

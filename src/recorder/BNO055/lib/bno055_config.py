@@ -192,9 +192,87 @@ class BNO055UnitConfig(BNO055ConfigBase):
 
 
 @dataclass
+class BNO055AxisMapConfig(BNO055ConfigBase):
+    x_axis: str = "z_axis"
+    y_axis: str = "x_axis"
+    z_axis: str = "y_axis"
+
+    def is_valid(self) -> bool:
+        if self.x_axis == self.y_axis:
+            return False
+        if self.x_axis == self.z_axis:
+            return False
+        if self.y_axis == self.z_axis:
+            return False
+        return True
+
+    def get_register_value(self):
+        if self.x_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"X axis value {self.x_axis} is not mapped.")
+        if self.y_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"Y axis value {self.y_axis} is not mapped.")
+        if self.z_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"Z axis value {self.z_axis} is not mapped.")
+        register_value = reg_vals.AXIS_MAP_CONFIG[self.z_axis] << 4
+        register_value |= reg_vals.AXIS_MAP_CONFIG[self.y_axis] << 2
+        register_value |= reg_vals.AXIS_MAP_CONFIG[self.x_axis]
+        return register_value
+
+    @classmethod
+    def from_register_value(cls, register_value: int):
+        rightmost_byte = register_value & 0xFF
+        return cls(
+            x_axis=map_key_to_value(reg_vals.AXIS_MAP_CONFIG, rightmost_byte & 0b11),
+            y_axis=map_key_to_value(
+                reg_vals.AXIS_MAP_CONFIG, (rightmost_byte >> 2) & 0b11
+            ),
+            z_axis=map_key_to_value(
+                reg_vals.AXIS_MAP_CONFIG, (rightmost_byte >> 4) & 0b11
+            ),
+        )
+
+
+@dataclass
+class BNO055AxisSignConfig(BNO055ConfigBase):
+    x_axis: int = 1
+    y_axis: int = 1
+    z_axis: int = 1
+
+    def is_valid(self) -> bool:
+        if self.x_axis not in (0, 1):
+            return False
+        if self.y_axis not in (0, 1):
+            return False
+        if self.z_axis not in (0, 1):
+            return False
+        return True
+
+    def get_register_value(self) -> int:
+        if not self.is_valid():
+            return 0
+        register_value = self.x_axis << 2
+        register_value |= self.y_axis << 1
+        register_value |= self.z_axis
+        return register_value
+
+    @classmethod
+    def from_register_value(cls, register_value: int):
+        rightmost_byte = register_value & 0xFF
+        return cls(
+            x_axis=(rightmost_byte >> 2) & 0b1,
+            y_axis=(rightmost_byte >> 1) & 0b1,
+            z_axis=rightmost_byte & 0b1,
+        )
+
+
+@dataclass
 class BNO055Config:
     power_mode: reg_vals.PwrMode = reg_vals.PwrMode.NORMAL
     operation_mode: reg_vals.OpMode = reg_vals.OpMode.ACCGYRO
     accelerometer: BNO055AccConfig = field(default_factory=lambda: BNO055AccConfig())
     gyroscope: BNO055GyrConfig = field(default_factory=lambda: BNO055GyrConfig())
     unit: BNO055UnitConfig = field(default_factory=lambda: BNO055UnitConfig())
+    axis_map: BNO055AxisMapConfig = field(default_factory=lambda: BNO055AxisMapConfig())
+    axis_map_sign: BNO055AxisSignConfig = field(
+        default_factory=lambda: BNO055AxisSignConfig()
+    )
