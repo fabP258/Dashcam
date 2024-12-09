@@ -114,6 +114,10 @@ class BNO055(I2CSensor):
             self.read_byte_data(bno055_registers.UNIT_SEL)
         )
         unit_config.print_config()
+        axis_map_config = bno055_config.BNO055AxisConfig.from_register_value(
+            self.read_byte_data(bno055_registers.AXIS_MAP_CONFIG_ADDRESS)
+        )
+        axis_map_config.print_config()
 
     def calibration_status(self) -> bno055_status.BNO055CalibrationStatus:
         return bno055_status.BNO055CalibrationStatus.from_register_value(

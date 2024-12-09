@@ -192,6 +192,35 @@ class BNO055UnitConfig(BNO055ConfigBase):
 
 
 @dataclass
+class BNO055AxisConfig(BNO055ConfigBase):
+    x_axis: str = "x_axis"
+    y_axis: str = "y_axis"
+    z_axis: str = "z_axis"
+
+    def is_valid(self) -> bool:
+        if self.x_axis == self.y_axis:
+            return False
+        if self.x_axis == self.z_axis:
+            return False
+        if self.y_axis == self.z_axis:
+            return False
+        return True
+
+    @classmethod
+    def from_register_value(cls, register_value: int):
+        rightmost_byte = register_value & 0xFF
+        return cls(
+            x_axis=map_key_to_value(reg_vals.AXIS_MAP_CONFIG, rightmost_byte & 0b11),
+            y_axis=map_key_to_value(
+                reg_vals.AXIS_MAP_CONFIG, (rightmost_byte >> 2) & 0b11
+            ),
+            z_axis=map_key_to_value(
+                reg_vals.AXIS_MAP_CONFIG, (rightmost_byte >> 4) & 0b11
+            ),
+        )
+
+
+@dataclass
 class BNO055Config:
     power_mode: reg_vals.PwrMode = reg_vals.PwrMode.NORMAL
     operation_mode: reg_vals.OpMode = reg_vals.OpMode.ACCGYRO
