@@ -193,9 +193,9 @@ class BNO055UnitConfig(BNO055ConfigBase):
 
 @dataclass
 class BNO055AxisMapConfig(BNO055ConfigBase):
-    x_axis: str = "y_axis"
-    y_axis: str = "z_axis"
-    z_axis: str = "x_axis"
+    x_axis: str = "z_axis"
+    y_axis: str = "x_axis"
+    z_axis: str = "y_axis"
 
     def is_valid(self) -> bool:
         if self.x_axis == self.y_axis:
@@ -233,9 +233,46 @@ class BNO055AxisMapConfig(BNO055ConfigBase):
 
 
 @dataclass
+class BNO055AxisSignConfig(BNO055ConfigBase):
+    x_axis: int = 1
+    y_axis: int = 1
+    z_axis: int = 0
+
+    def is_valid(self) -> bool:
+        if self.x_axis not in (0, 1):
+            return False
+        if self.y_axis not in (0, 1):
+            return False
+        if self.z_axis not in (0, 1):
+            return False
+        return True
+
+    def get_register_value(self) -> int:
+        if not self.is_valid():
+            return 0
+        register_value = self.x_axis << 2
+        register_value |= self.y_axis << 1
+        register_value |= self.z_axis
+        return register_value
+
+    @classmethod
+    def from_register_value(cls, register_value: int):
+        rightmost_byte = register_value & 0xFF
+        return cls(
+            x_axis=(rightmost_byte >> 2) & 0b1,
+            y_axis=(rightmost_byte >> 1) & 0b1,
+            z_axis=rightmost_byte & 0b1,
+        )
+
+
+@dataclass
 class BNO055Config:
     power_mode: reg_vals.PwrMode = reg_vals.PwrMode.NORMAL
     operation_mode: reg_vals.OpMode = reg_vals.OpMode.ACCGYRO
     accelerometer: BNO055AccConfig = field(default_factory=lambda: BNO055AccConfig())
     gyroscope: BNO055GyrConfig = field(default_factory=lambda: BNO055GyrConfig())
     unit: BNO055UnitConfig = field(default_factory=lambda: BNO055UnitConfig())
+    axis_map: BNO055AxisMapConfig = field(default_factory=lambda: BNO055AxisMapConfig())
+    axis_map_sign: BNO055AxisSignConfig = field(
+        default_factory=lambda: BNO055AxisSignConfig()
+    )

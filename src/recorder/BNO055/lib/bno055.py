@@ -51,7 +51,7 @@ class BNO055(I2CSensor):
         self._configure_units(config.unit)
         self._configure_acc(config.accelerometer)
         self._configure_gyr(config.gyroscope)
-        self._configure_axis()
+        self._configure_axis(config.axis_map, config.axis_map_sign)
         self.set_op_mode(config.operation_mode)
         # TODO: check if configuration was successful by reading it and comparing
 
@@ -100,12 +100,17 @@ class BNO055(I2CSensor):
         new_unit_sel_value = unit_sel_value | unit_config.get_register_value()
         self.write_byte_data(bno055_registers.UNIT_SEL, new_unit_sel_value)
 
-    def _configure_axis(self, axis_map_config: bno055_config.BNO055AxisMapConfig):
+    def _configure_axis(
+        self,
+        axis_map_config: bno055_config.BNO055AxisMapConfig,
+        axis_sign_config: bno055_config.BNO055AxisSignConfig,
+    ):
         if not (self._op_mode == bno055_register_values.OpMode.CONFIGMODE):
             raise Warning(
                 "Could not configure sensor units. Sensor is not in config mode."
             )
             return
+        # axis map
         register_value = self.read_byte_data(bno055_registers.AXIS_MAP_CONFIG_ADDRESS)
         reserved_mask = 0b11000000
         register_value &= reserved_mask
@@ -113,6 +118,12 @@ class BNO055(I2CSensor):
         self.write_byte_data(
             bno055_registers.AXIS_MAP_CONFIG_ADDRESS, new_register_value
         )
+        # axis sign
+        register_value = self.read_byte_data(bno055_registers.AXIS_MAP_SIGN_ADDRESS)
+        reserved_mask = 0b11111000
+        register_value &= reserved_mask
+        new_register_value = register_value | axis_sign_config.get_register_value()
+        self.write_byte_data(bno055_registers.AXIS_MAP_SIGN_ADDRESS, new_register_value)
 
     def print_config(self):
         self.switch_register_page(0x01)
@@ -134,6 +145,10 @@ class BNO055(I2CSensor):
             self.read_byte_data(bno055_registers.AXIS_MAP_CONFIG_ADDRESS)
         )
         axis_map_config.print_config()
+        axis_sign_config = bno055_config.BNO055AxisSignConfig.from_register_value(
+            self.read_byte_data(bno055_registers.AXIS_MAP_SIGN_ADDRESS)
+        )
+        axis_sign_config.print_config()
 
     def calibration_status(self) -> bno055_status.BNO055CalibrationStatus:
         return bno055_status.BNO055CalibrationStatus.from_register_value(
