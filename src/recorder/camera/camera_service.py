@@ -35,7 +35,7 @@ class CameraServiceImplementation:
             self._encoder,
             str(self._logging_directory / "video.h264"),
             pts=str(self._logging_directory / "frame_timestamps.txt"),
-            quality=Quality.HIGH,
+            quality=Quality.VERY_HIGH,
         )
 
     def stop(self):
