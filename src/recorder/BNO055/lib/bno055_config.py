@@ -192,10 +192,10 @@ class BNO055UnitConfig(BNO055ConfigBase):
 
 
 @dataclass
-class BNO055AxisConfig(BNO055ConfigBase):
-    x_axis: str = "x_axis"
-    y_axis: str = "y_axis"
-    z_axis: str = "z_axis"
+class BNO055AxisMapConfig(BNO055ConfigBase):
+    x_axis: str = "y_axis"
+    y_axis: str = "z_axis"
+    z_axis: str = "x_axis"
 
     def is_valid(self) -> bool:
         if self.x_axis == self.y_axis:
@@ -205,6 +205,18 @@ class BNO055AxisConfig(BNO055ConfigBase):
         if self.y_axis == self.z_axis:
             return False
         return True
+
+    def get_register_value(self):
+        if self.x_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"X axis value {self.x_axis} is not mapped.")
+        if self.y_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"Y axis value {self.y_axis} is not mapped.")
+        if self.z_axis not in reg_vals.AXIS_MAP_CONFIG.keys():
+            raise ValueError(f"Z axis value {self.z_axis} is not mapped.")
+        register_value = reg_vals.AXIS_MAP_CONFIG[self.z_axis] << 4
+        register_value |= reg_vals.AXIS_MAP_CONFIG[self.y_axis] << 2
+        register_value |= reg_vals.AXIS_MAP_CONFIG[self.x_axis]
+        return register_value
 
     @classmethod
     def from_register_value(cls, register_value: int):
