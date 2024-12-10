@@ -1,6 +1,6 @@
 # Dashcam
 
-![Dashcam](img/dashcam.png){width=300px}
+<img src="img/dashcam.png" alt="Dashcam" width="300">
 
 SW running on a RaspberryPi based dashcam.
 
