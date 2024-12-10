@@ -34,8 +34,8 @@ class BNO055ConfigBase(ABC):
 
 @dataclass
 class BNO055AccConfig(BNO055ConfigBase):
-    value_range: str = "4G"
-    bandwidth: str = "62.5Hz"
+    value_range: str = "2G"
+    bandwidth: str = "31.25Hz"
     op_mode: str = "Normal"
 
     def get_register_value(self):
@@ -86,7 +86,7 @@ class BNO055AccConfig(BNO055ConfigBase):
 
 @dataclass
 class BNO055GyrConfig(BNO055ConfigBase):
-    value_range: str = "2000dps"
+    value_range: str = "250dps"
     bandwidth: str = "32Hz"
     op_mode: str = "Normal"
 

@@ -10,13 +10,14 @@ class CameraServiceImplementation:
     def __init__(self, rec_start_time: float, logging_directory: str | Path):
         self._picam = Picamera2(1)
         video_config = self._picam.create_video_configuration(
+            main={"size": (1920, 1080)},
             controls={
                 "FrameDurationLimits": (40000, 40000),
                 "ExposureTime": 10000,  # set this lower for calibration
                 "AfMode": controls.AfModeEnum.Manual,
                 # "AeEnable": False,
                 # "HdrMode": controls.HdrModeEnum.SingleExposure
-            }
+            },
         )
         self._picam.configure(video_config)
         self._rec_start_time = rec_start_time
