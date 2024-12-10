@@ -1,5 +1,8 @@
 # Dashcam
-SW running the data recording device
+
+![Dashcam](img/dashcam.png){width=300px}
+
+SW running on a RaspberryPi based dashcam.
 
 ## Getting started
 
