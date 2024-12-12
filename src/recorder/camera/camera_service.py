@@ -14,6 +14,12 @@ class CameraService(Service):
 
     def setup(self):
         self._picam = Picamera2(self._cam_idx)
+        self._cam_info = None
+        for cam_info in self._picam.global_camera_info():
+            if cam_info["Num"] == self._cam_idx:
+                self._cam_info = cam_info
+        if self._cam_info is None:
+            return
         video_config = self._picam.create_video_configuration(
             main={"size": (1920, 1080)},
             controls={
@@ -35,8 +41,10 @@ class CameraService(Service):
     def start(self):
         self._picam.start_recording(
             self._encoder,
-            str(self._logging_directory / "video.h264"),
-            pts=str(self._logging_directory / "frame_timestamps.txt"),
+            str(self._logging_directory / f"{self._cam_info['Model']}.h264"),
+            pts=str(
+                self._logging_directory / f"{self._cam_info['Model']}_timestamps.txt"
+            ),
             quality=Quality.VERY_HIGH,
         )
 
