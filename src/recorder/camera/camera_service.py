@@ -6,29 +6,30 @@ from picamera2.encoders import H264Encoder, Quality
 from recorder.system.service import Service
 
 
-class CameraServiceImplementation:
-    def __init__(self, rec_start_time: float, logging_directory: str | Path):
-        self._picam = Picamera2(1)
+class CameraService(Service):
+    def __init__(self, cam_idx: int, start_time: float, logging_directory: str | Path):
+        self._cam_idx = cam_idx
+        self._start_time = start_time
+        self._logging_directory = Path(logging_directory)
+
+    def setup(self):
+        self._picam = Picamera2(self._cam_idx)
         video_config = self._picam.create_video_configuration(
             main={"size": (1920, 1080)},
             controls={
                 "FrameDurationLimits": (40000, 40000),
                 "ExposureTime": 10000,  # set this lower for calibration
                 "AfMode": controls.AfModeEnum.Manual,
-                # "AeEnable": False,
-                # "HdrMode": controls.HdrModeEnum.SingleExposure
             },
         )
         self._picam.configure(video_config)
-        self._rec_start_time = rec_start_time
-        self._logging_directory = Path(logging_directory)
         self._time_offset = None
         self._picam.pre_callback = self.get_time_offset
         self._encoder = H264Encoder()
 
     def get_time_offset(self, request):
         if self._time_offset is None:
-            self._time_offset = time.monotonic() - self._rec_start_time
+            self._time_offset = time.monotonic() - self._start_time
             self._time_offset *= 1000
 
     def start(self):
@@ -51,17 +52,9 @@ class CameraServiceImplementation:
             for timestamp in frame_timestamps:
                 f.write(f"{timestamp+self._time_offset}\n")
 
-
-class CameraService(Service):
-    def __init__(self, start_time: float, logging_directory: str | Path):
-        self._start_time = start_time
-        self._logging_directory = Path(logging_directory)
-
     def run(self, stop_event):
-        service_implementation = CameraServiceImplementation(
-            rec_start_time=self._start_time, logging_directory=self._logging_directory
-        )
-        service_implementation.start()
+        self.setup()
+        self.start()
         while not stop_event.is_set():
             time.sleep(0.04)
-        service_implementation.stop()
+        self.stop()
