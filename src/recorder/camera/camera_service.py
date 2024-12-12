@@ -23,7 +23,7 @@ class CameraService(Service):
         if self._video_fn is None:
             return
         video_config = self._picam.create_video_configuration(
-            main={"size": (1920, 1080), "format": "RGB888"},
+            main={"size": (1920, 1080), "format": "YUV420"},
             buffer_count=20,
             controls={
                 "FrameDurationLimits": (40000, 40000),
