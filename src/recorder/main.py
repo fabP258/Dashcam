@@ -37,6 +37,11 @@ def record_single_measurement():
     )
     services.append(
         CameraService(
+            cam_idx=0, start_time=start_time, logging_directory=logging_directory
+        )
+    )
+    services.append(
+        CameraService(
             cam_idx=1, start_time=start_time, logging_directory=logging_directory
         )
     )

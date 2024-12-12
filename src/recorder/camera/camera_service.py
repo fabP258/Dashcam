@@ -14,14 +14,17 @@ class CameraService(Service):
 
     def setup(self):
         self._picam = Picamera2(self._cam_idx)
-        self._cam_info = None
+        self._video_fn = None
+        self._timestamp_fn = None
         for cam_info in self._picam.global_camera_info():
             if cam_info["Num"] == self._cam_idx:
-                self._cam_info = cam_info
-        if self._cam_info is None:
+                self._video_fn = f"{cam_info['Model']}.h264"
+                self._timestamp_fn = f"{cam_info['Model']}_timestamps.txt"
+        if self._video_fn is None:
             return
         video_config = self._picam.create_video_configuration(
-            main={"size": (1920, 1080)},
+            main={"size": (1920, 1080), "format": "RGB888"},
+            buffer_count=20,
             controls={
                 "FrameDurationLimits": (40000, 40000),
                 "ExposureTime": 10000,  # set this lower for calibration
@@ -39,13 +42,13 @@ class CameraService(Service):
             self._time_offset *= 1000
 
     def start(self):
+        if (self._video_fn is None) or (self._timestamp_fn is None):
+            return
         self._picam.start_recording(
             self._encoder,
-            str(self._logging_directory / f"{self._cam_info['Model']}.h264"),
-            pts=str(
-                self._logging_directory / f"{self._cam_info['Model']}_timestamps.txt"
-            ),
-            quality=Quality.VERY_HIGH,
+            str(self._logging_directory / self._video_fn),
+            pts=str(self._logging_directory / self._timestamp_fn),
+            quality=Quality.MEDIUM,
         )
 
     def stop(self):
@@ -53,10 +56,10 @@ class CameraService(Service):
         self.postprocess()
 
     def postprocess(self):
-        with open(self._logging_directory / "frame_timestamps.txt", "r") as f:
+        with open(self._logging_directory / self._timestamp_fn, "r") as f:
             frame_timestamps = [float(line.strip()) for line in f]
 
-        with open(self._logging_directory / "frame_timestamps.txt", "w") as f:
+        with open(self._logging_directory / self._timestamp_fn, "w") as f:
             for timestamp in frame_timestamps:
                 f.write(f"{timestamp+self._time_offset}\n")
 
