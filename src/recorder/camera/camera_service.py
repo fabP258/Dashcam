@@ -24,7 +24,7 @@ class CameraService(Service):
             return
         video_config = self._picam.create_video_configuration(
             main={"size": (1920, 1080), "format": "YUV420"},
-            buffer_count=20,
+            buffer_count=12,
             controls={
                 "FrameDurationLimits": (40000, 40000),
                 "ExposureTime": 10000,  # set this lower for calibration
@@ -48,7 +48,7 @@ class CameraService(Service):
             self._encoder,
             str(self._logging_directory / self._video_fn),
             pts=str(self._logging_directory / self._timestamp_fn),
-            quality=Quality.MEDIUM,
+            quality=Quality.HIGH,
         )
 
     def stop(self):
