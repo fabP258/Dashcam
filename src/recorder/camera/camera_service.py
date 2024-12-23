@@ -27,7 +27,8 @@ class CameraService(Service):
             buffer_count=12,
             controls={
                 "FrameDurationLimits": (40000, 40000),
-                "ExposureTime": 10000,  # set this lower for calibration
+                # "ExposureTime": 10000,  # set this lower for calibration
+                "AeExposureMode": controls.AeExposureModeEnum.Short,
                 "AfMode": controls.AfModeEnum.Manual,
             },
         )
