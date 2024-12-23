@@ -3,7 +3,7 @@ from pathlib import Path
 from libcamera import controls
 from picamera2 import Picamera2
 from picamera2.encoders import H264Encoder, Quality
-from recorder.system.service import Service
+from recorder.mw.service import Service
 
 
 class CameraService(Service):

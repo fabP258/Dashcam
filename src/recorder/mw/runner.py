@@ -1,7 +1,7 @@
 from typing import List
-from recorder.system.process import PythonProcess
-from recorder.system.service import Service
-from recorder.system.rate_keeper import RateKeeper
+from recorder.mw.process import PythonProcess
+from recorder.mw.service import Service
+from recorder.mw.rate_keeper import RateKeeper
 
 
 class ServiceRunner:

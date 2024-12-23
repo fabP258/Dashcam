@@ -3,7 +3,7 @@ import sys
 import argparse
 from datetime import datetime
 from pathlib import Path
-from recorder.system.runner import ServiceRunner
+from recorder.mw.runner import ServiceRunner
 from recorder.BNO055.imu_service import IMUService
 from recorder.camera.camera_service import CameraService
 

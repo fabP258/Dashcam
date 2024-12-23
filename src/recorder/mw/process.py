@@ -1,7 +1,7 @@
 """Implements a python process class"""
 
 from multiprocessing import Process, Event
-from recorder.system.service import Service
+from recorder.mw.service import Service
 
 
 class PythonProcess:

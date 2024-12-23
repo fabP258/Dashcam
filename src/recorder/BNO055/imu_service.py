@@ -1,8 +1,8 @@
 import time
 from pathlib import Path
 from typing import List
-from recorder.system.service import Service
-from recorder.system.rate_keeper import RateKeeper
+from recorder.mw.service import Service
+from recorder.mw.rate_keeper import RateKeeper
 from recorder.BNO055.lib.bno055 import BNO055
 
 
