@@ -8,15 +8,6 @@ int main()
     size_t size = 1024;
     const std::string shm_name = "/my_message";
 
-    int res = msgq_new_queue(&msg_queue, shm_name.c_str(), size);
-    if (res != 0)
-    {
-        std::cout << "Could not create shared memory message queue." << std::endl;
-        return 0;
-    }
-
-    std::cout << "Message queue created successfully." << std::endl;
-
     MSGQSubSocket *sub_socket = MSGQSubSocket::create(shm_name);
 
     std::cout << "Creates sub socket\n";
