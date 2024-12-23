@@ -84,10 +84,14 @@ int msgq_new_queue(msgq_queue_t * q, const char * path, size_t size)
     return 0;
 }
 
-void msgq_close_queue(msgq_queue_t *q){
+void msgq_close_queue(msgq_queue_t *q, bool is_master){
   if (q->mmap_p != NULL){
     munmap(q->mmap_p, q->size + sizeof(msgq_header_t));
   }
+
+  if (!is_master)
+    return;
+
   if (shm_unlink(q->endpoint.c_str()) == -1)
   {
     std::cout << "Failed to unlink shared memory." << std::endl;
