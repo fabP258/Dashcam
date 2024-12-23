@@ -21,14 +21,16 @@ cdef extern from "ipc.h":
 
 cdef class SubSocket:
   cdef MSGQSubSocket * socket
-  cdef bool is_owner
 
   def __cinit__(self, string endpoint, bool conflate=False):
     self.socket = MSGQSubSocket.create(endpoint, conflate)
-    self.is_owner = True
 
     if self.socket == NULL:
       raise Exception("Failed to create cppSubSocket.")
+
+  def __dealloc__(self):
+    if self.socket != NULL:
+      del self.socket
 
   def receive(self):
     msg = self.socket.receive()
@@ -49,6 +51,10 @@ cdef class PubSocket:
     self.socket = MSGQPubSocket.create(endpoint)
     if self.socket == NULL:
       raise Exception("Failed to create cppPubSocket.")
+
+  def __dealloc__(self):
+    if self.socket != NULL:
+      del self.socket
 
   def send(self, bytes data):
     length = len(data)

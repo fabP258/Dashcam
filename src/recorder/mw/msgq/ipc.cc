@@ -31,7 +31,7 @@ MSGQMessage::~MSGQMessage() {
 
 MSGQSubSocket::~MSGQSubSocket(){
   if (m_q != NULL){
-    msgq_close_queue(m_q);
+    msgq_close_queue(m_q, false);
     delete m_q;
   }
 }
@@ -132,7 +132,7 @@ bool MSGQPubSocket::all_readers_updated(){
 
 MSGQPubSocket::~MSGQPubSocket(){
   if (m_q != NULL) {
-    msgq_close_queue(m_q);
+    msgq_close_queue(m_q, true);
     delete m_q;
   }
 }
