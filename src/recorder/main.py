@@ -6,6 +6,7 @@ from pathlib import Path
 from recorder.mw.runner import ServiceRunner
 from recorder.BNO055.imu_service import IMUService
 from recorder.camera.camera_service import CameraService
+from recorder.logger.logger_service import LoggerService
 
 
 def parse_args(args):
@@ -44,6 +45,9 @@ def record_single_measurement():
         CameraService(
             cam_idx=1, start_time=start_time, logging_directory=logging_directory
         )
+    )
+    services.append(
+        LoggerService(start_time=start_time, logging_directory=logging_directory)
     )
     runner = ServiceRunner(services)
     runner.start()
